@@ -1,4 +1,9 @@
-from tkinter import Tk, Label, Button, Entry, IntVar, END, W, E, filedialog
+from tkinter import Tk, Label, Button, Entry, IntVar, END, W, E, filedialog, PhotoImage
+from tkinter import messagebox
+
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+
+from Kmeans import Kmeans
 from PreProcess import PreProcess
 
 
@@ -7,7 +12,7 @@ class GUI:
     def __init__(self, master):
         self.master = master
         master.title("GUI")
-        master.geometry('400x200')
+        master.geometry('1024x700')
 
         self.total = 0
         self.entered_number = 0
@@ -31,8 +36,8 @@ class GUI:
         self.entry2 = Entry(master, validate="key", validatecommand=(vcmd, '%P'))
         self.number_runs = Label(master, text="Number of runs")
         self.entry3 = Entry(master, validate="key", validatecommand=(vcmd, '%P'))
-        self.pre_process_btn = Button(master, text="Pre-process", command=lambda: PreProcess(self.entry.get()))
-        self.cluster = Button(master, text="Cluster", command=lambda: PreProcess(self.entry.get()))
+        self.pre_process_btn = Button(master, text="Pre-process", command=lambda: self.preprocess(self.entry.get()))
+        self.cluster = Button(master, text="Cluster", command=lambda: self.kmeans(self.processing.countriesDataFrame, self.entry2.get(), self.entry3.get()))
 
         # LAYOUT
         self.entry.grid(row=0, column=0, columnspan=6, sticky=W + E)
@@ -56,13 +61,6 @@ class GUI:
             return False
 
     def update(self, method):
-        if method == "add":
-            self.total += self.entered_number
-        elif method == "subtract":
-            self.total -= self.entered_number
-        else:  # reset
-            self.total = 0
-
         self.total_label_text.set(self.total)
         self.entry.delete(0, END)
 
@@ -71,6 +69,30 @@ class GUI:
         file_path = filedialog.askopenfilename()
         entry.insert(0, file_path)
         return
+
+    def preprocess(self, path):
+        try:
+            self.processing = PreProcess(path)
+            messagebox.showinfo(title='Done', message='PreProcessing Finished')
+        except:
+            messagebox.showerror(title='Error', message='There was an error with the path\'s file')
+
+    def kmeans(self, dataframe, numOfClusters, numOfInit):
+        try:
+            numOfInit = int(numOfInit)
+            numOfClusters = int(numOfClusters)
+            model = Kmeans(dataframe, numOfClusters, numOfInit)
+            model.draw()
+            scatter_canvas = FigureCanvasTkAgg(model.scatter, master=self.master)
+            #scatter_canvas.draw()
+            scatter_canvas.get_tk_widget().grid(row=7, column=0, sticky=W)
+            saved_map = PhotoImage(file="choropleth-map.png")
+            map_as_image = Label(self.master, image=saved_map)
+            map_as_image.image = saved_map
+            map_as_image.grid(row=7, column=1, sticky=W)
+        except:
+            messagebox.showerror(title='Error', message='There was an error with the variables')
+
 
 
 root = Tk()
