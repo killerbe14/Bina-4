@@ -64,6 +64,8 @@ class GUI:
             # At start we try to make the input as int, and if we fail we exit
             numOfInit = int(numOfInit)
             numOfClusters = int(numOfClusters)
+            if numOfClusters < 2:  # if clusters are less than 2 so there's a problem with the arguements
+                raise Exception()
             # making a model and making the scatter and map
             model = Kmeans(dataframe, numOfClusters, numOfInit)
             model.draw()
